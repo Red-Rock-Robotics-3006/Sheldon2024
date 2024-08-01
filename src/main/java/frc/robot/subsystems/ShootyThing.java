@@ -14,9 +14,9 @@ import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Utils3006.SmartDashboardNumber;
 
-public class Shooter extends SubsystemBase{
+public class ShootyThing extends SubsystemBase{
 
-    private static Shooter instance = null;
+    private static ShootyThing instance = null;
 
     private final TalonFX m_topShooter = new TalonFX(1241341324); // these ids are placeholders
     private final TalonFX m_bottomShooter = new TalonFX(69420); // please dont actually use these ids
@@ -36,7 +36,7 @@ public class Shooter extends SubsystemBase{
     private SmartDashboardNumber hasNoteThresholdDeviation = new SmartDashboardNumber("intake-note deviation threshold", 100);
                                 
 
-    private Shooter() {
+    private ShootyThing() {
         super("Shooter");
 
         this.m_topShooter.setInverted(false);
@@ -142,8 +142,8 @@ public class Shooter extends SubsystemBase{
         return this.runOnce(() -> this.stop());
     }
 
-    public static Shooter getInstance(){
-        if (instance == null) instance = new Shooter();
+    public static ShootyThing getInstance(){
+        if (instance == null) instance = new ShootyThing();
         return instance;
     }
 }

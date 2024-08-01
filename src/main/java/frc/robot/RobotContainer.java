@@ -18,7 +18,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.ShootyThing;
 
 public class RobotContainer {
   private double MaxSpeed = CommandSwerveDrivetrain.kDriveMaxSpeed; // kSpeedAt12VoltsMps desired top speed
@@ -40,7 +40,7 @@ public class RobotContainer {
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
-  private final Shooter m_shooter = Shooter.getInstance();
+  private final ShootyThing m_shooter = ShootyThing.getInstance();
 
   private void configureBindingsDrive() {
     drivetrain.setDefaultCommand(
