@@ -18,21 +18,21 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Shooter;
 
 public class RobotContainer {
   private double MaxSpeed = CommandSwerveDrivetrain.kDriveMaxSpeed; // kSpeedAt12VoltsMps desired top speed
   private double MaxAngularRate = CommandSwerveDrivetrain.kTurnMaxSpeed; // 3/4 of a rotation per second max angular velocity
 
-  /* Setting up bindings for necessary control of the swerve drive platform */
-  private final CommandXboxController drivestick = new CommandXboxController(0); // My drivestick
-  private final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance(); // My drivetrain
+  private final CommandXboxController drivestick = new CommandXboxController(0);
+  private final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
 
   private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-      .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-      .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // I want field-centric
-                                                               // driving in open loop
+      .withDeadband(MaxSpeed * CommandSwerveDrivetrain.kDriveDeadBand).withRotationalDeadband(MaxAngularRate * CommandSwerveDrivetrain.kTurnDeadBand) // Add a 10% deadband
+      .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+                                                             
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-  private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+  // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
   private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
       .withDeadband(MaxSpeed * CommandSwerveDrivetrain.kDriveDeadBand).withRotationalDeadband(MaxAngularRate * CommandSwerveDrivetrain.kTurnDeadBand)
@@ -40,14 +40,9 @@ public class RobotContainer {
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
-  private void configureBindings() {
-    // drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
-    //     drivetrain.applyRequest(() -> drive.withVelocityX(-drivestick.getLeftY() * MaxSpeed) // Drive forward with
-    //                                                                                        // negative Y (forward)
-    //         .withVelocityY(-drivestick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-    //         .withRotationalRate(-drivestick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
-    //     ));
+  private final Shooter m_shooter = Shooter.getInstance();
 
+  private void configureBindingsDrive() {
     drivetrain.setDefaultCommand(
       drivetrain.applyRequest(
         () -> {
@@ -76,20 +71,59 @@ public class RobotContainer {
         () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
     );
     
-    drivestick.leftBumper().onTrue(
+    drivestick.back().onTrue(
       new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
     );
 
-    drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    drivestick.b().whileTrue(drivetrain
-        .applyRequest(() -> point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))));
+    drivestick.rightBumper().whileTrue(drivetrain.applyRequest(() -> brake));
+    // drivestick.b().whileTrue(drivetrain
+    //     .applyRequest(() -> point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))));
 
-    drivestick.y().onTrue(drivetrain.resetHeadingCommand());
+    drivestick.start().onTrue(drivetrain.resetHeadingCommand());
+
+    drivestick.povLeft().onTrue(
+      new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
+    );
+
+    drivestick.povUp().onTrue(
+      new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
+    );
+
+    drivestick.povRight().onTrue(
+      new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
+    );
+
+    drivestick.povDown().onTrue(
+      new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
+    );
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
     }
     drivetrain.registerTelemetry(logger::telemeterize);
+  }
+
+  private void configureBindingsMech(){
+    drivestick.leftBumper().onTrue(
+      m_shooter.intakeCommand()
+    );
+
+    drivestick.x().onTrue(
+      m_shooter.shootCommand()
+    );
+
+    drivestick.y().onTrue(
+      m_shooter.ampCommand()
+    );
+
+    drivestick.b().onTrue(
+      m_shooter.stopCommand()
+    );
+  }
+
+  private void configureBindings(){
+    this.configureBindingsDrive();
+    this.configureBindingsMech();
   }
 
   public RobotContainer() {
@@ -100,6 +134,12 @@ public class RobotContainer {
   public void loop(){
     MaxSpeed = drivetrain.getMaxDriveSpeed();
     MaxAngularRate = drivetrain.getMaxTurnSpeed() * Math.PI;
+
+    drive.Deadband = drivetrain.getDriveDeadBand();
+    drive.RotationalDeadband = drivetrain.getTurnDeadBand();
+
+    driveFacingAngle.Deadband = drivetrain.getDriveDeadBand();
+    driveFacingAngle.RotationalDeadband = drivetrain.getTurnDeadBand();
   }
 
   public Command getAutonomousCommand() {

@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.Utils3006.SmartDashboardNumber;
 import frc.robot.generated.TunerConstants;
 
 /**
@@ -37,15 +38,15 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     public static final double kRotateI = 0;
     public static final double kRotateD = 0.1;
 
-    private double rotateP, rotateI, rotateD;
+    private SmartDashboardNumber rotateP, rotateI, rotateD;
 
-    private double rotationOmegaSignificance;
-    private double driveMaxSpeed;
-    private double turnMaxSpeed;
-    private double driveDeadBand;
-    private double turnDeadBand;
+    private SmartDashboardNumber rotationOmegaSignificance;
+    private SmartDashboardNumber driveMaxSpeed;
+    private SmartDashboardNumber turnMaxSpeed;
+    private SmartDashboardNumber driveDeadBand;
+    private SmartDashboardNumber turnDeadBand;
 
-    private boolean enableHeadingPID = false;
+    private boolean enableHeadingPID = true;
 
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
@@ -78,15 +79,15 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     private void initialize(){
-        SmartDashboard.putNumber("dt-rotation rate limit", kRotationOmegaSignificance);
-        SmartDashboard.putNumber("dt-max drive", kDriveMaxSpeed);
-        SmartDashboard.putNumber("dt-max turn", kTurnMaxSpeed);
-        SmartDashboard.putNumber("dt-drive deadband", kDriveDeadBand);
-        SmartDashboard.putNumber("dt-turn deadband", kTurnDeadBand);
+        this.rotationOmegaSignificance = new SmartDashboardNumber("dt-rotation rate limit", kRotationOmegaSignificance);
+        this.driveMaxSpeed = new SmartDashboardNumber("dt-max drive", kDriveMaxSpeed);
+        this.turnMaxSpeed = new SmartDashboardNumber("dt-max turn", kTurnMaxSpeed);
+        this.driveDeadBand = new SmartDashboardNumber("dt-drive deadband", kDriveDeadBand);
+        this.turnDeadBand = new SmartDashboardNumber("dt-turn deadband", kTurnDeadBand);
 
-        SmartDashboard.putNumber("dt-heading p", kRotateP);
-        SmartDashboard.putNumber("dt-heading i", kRotateI);
-        SmartDashboard.putNumber("dt-heading d", kRotateD);
+        this.rotateP = new SmartDashboardNumber("dt-heading p", kRotateP);
+        this.rotateI = new SmartDashboardNumber("dt-heading i", kRotateI);
+        this.rotateD = new SmartDashboardNumber("dt-heading d", kRotateD);
     }
 
     public void setSwerveRequest(SwerveRequest.FieldCentricFacingAngle request){
@@ -129,17 +130,17 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             });
         }
 
-        this.driveMaxSpeed = SmartDashboard.getNumber("dt-max drive", kDriveMaxSpeed);
-        this.turnMaxSpeed = SmartDashboard.getNumber("dt-max turn", kTurnMaxSpeed);
-        this.rotationOmegaSignificance = SmartDashboard.getNumber("dt-rotation rate limit", kRotationOmegaSignificance);
-        this.driveDeadBand = SmartDashboard.getNumber("dt-drive deadband", kDriveDeadBand);
-        this.turnDeadBand = SmartDashboard.getNumber("dt-turn deadband", kTurnDeadBand);
+        // this.driveMaxSpeed = SmartDashboard.getNumber("dt-max drive", kDriveMaxSpeed);
+        // this.turnMaxSpeed = SmartDashboard.getNumber("dt-max turn", kTurnMaxSpeed);
+        // this.rotationOmegaSignificance = SmartDashboard.getNumber("dt-rotation rate limit", kRotationOmegaSignificance);
+        // this.driveDeadBand = SmartDashboard.getNumber("dt-drive deadband", kDriveDeadBand);
+        // this.turnDeadBand = SmartDashboard.getNumber("dt-turn deadband", kTurnDeadBand);
 
-        this.rotateP = SmartDashboard.getNumber("dt-heading p", kRotateP);
-        this.rotateI = SmartDashboard.getNumber("dt-heading i", kRotateI);
-        this.rotateD = SmartDashboard.getNumber("dt-heading d", kRotateD);
+        // this.rotateP = SmartDashboard.getNumber("dt-heading p", kRotateP);
+        // this.rotateI = SmartDashboard.getNumber("dt-heading i", kRotateI);
+        // this.rotateD = SmartDashboard.getNumber("dt-heading d", kRotateD);
 
-        this.angleRequest.HeadingController.setPID(this.rotateP, this.rotateI, this.rotateD);
+        this.angleRequest.HeadingController.setPID(this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber());
         
         SmartDashboard.putBoolean("dt-using heading pid", this.enableHeadingPID);
         SmartDashboard.putNumber("dt-current heading", this.getHeadingDegrees());
@@ -174,23 +175,23 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     public boolean isRotating(){
-        return Math.abs(this.getPigeon2().getRate()) > this.rotationOmegaSignificance;
+        return Math.abs(this.getPigeon2().getRate()) > this.rotationOmegaSignificance.getNumber();
     }
 
     public double getMaxDriveSpeed(){
-        return this.driveMaxSpeed;
+        return this.driveMaxSpeed.getNumber();
     }
 
     public double getMaxTurnSpeed(){
-        return this.turnMaxSpeed;
+        return this.turnMaxSpeed.getNumber();
     }
 
     public double getDriveDeadBand(){
-        return this.driveDeadBand;
+        return this.driveDeadBand.getNumber();
     }
 
     public double getTurnDeadBand(){
-        return this.turnDeadBand;
+        return this.turnDeadBand.getNumber();
     }
 
     public void setUseHeadingPID(boolean b){
@@ -211,7 +212,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
      * @return Drivetrain Heading PID coeffs
      */
     public double[] getHeadingPIDCoeffs(){
-        return new double[]{this.rotateP, this.rotateI, this.rotateD};
+        return new double[]{this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber()};
     }
 
     public static CommandSwerveDrivetrain getInstance(){
